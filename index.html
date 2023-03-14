@@ -286,9 +286,10 @@
         urlinput.value = ''
         const dp = new DPlayer({
             container: document.getElementById('dplayer'),
-            // live: true,
+            live: true,
             autoplay: false,
-            chromecast: false,
+            airplay: true,
+            chromecast: true,
             preventClickToggle: true,
             lang: 'zh-cn',
             preload: 'auto',
@@ -402,7 +403,9 @@
                     }
                 )
                 dp.on('loadstart', () => {
-                    dp.play()
+                    setTimeout(() => {
+                        dp.play()
+                    }, 3000)  
                 })
                 //点击确认后控件变化
                 okview.style.display = 'none'
@@ -417,19 +420,7 @@
                     userRecord.removeChild(userRecord.lastChild)
                 }, 3000)
             }
-        })
-        //拖动进度同步
-        dp.on('seeking', () => {
-            socket.emit('seek', dp.video.currentTime)
-        })
-        socket.on('seek', (msg) => {
-            if (msg != videotime && dp.video.currentTime != dp.video.duration && dp.video.duration != null) {
-                dp.seek(msg)
-                videotime = dp.video.currentTime
-            } else { 
-                return
-            }
-        })
+        })  
         dp.on('timeupdate', () => {
             var arr = [urlinput.value, dp.video.currentTime]
             socket.emit('timeupdate', arr);
@@ -460,9 +451,9 @@
                 }
             )
             dp.on('loadstart', () => {
-                    dplayer.style.display = 'block'
-                    dp.seek(msg[1])
-                    dp.play()
+                dplayer.style.display = 'block'
+                dp.seek(msg[1])  
+                dp.play()
             })
         })
         //播放同步
@@ -481,6 +472,18 @@
         socket.on('pause', (msg) => {
             if (msg) {
                 dp.pause()
+            }
+        })
+        //拖动进度同步
+        dp.on('seeking', () => {
+            socket.emit('seek', dp.video.currentTime)
+        })
+        socket.on('seek', (msg) => {
+            if (msg != videotime && dp.video.currentTime != dp.video.duration && dp.video.duration != null) {
+                dp.seek(msg)
+                videotime = dp.video.currentTime
+            } else { 
+                return
             }
         })
         //卡顿加载后自动同步
