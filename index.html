@@ -435,7 +435,7 @@
         })
         //新用户加入，视频同步到其他在线用户
         socket.on('timeupdate', (msg) => {
-            if (urlinput.value != msg[0] && urlinput.value == '') {
+            if (urlinput.value == '') {
                 console.log(dp.video.currentTime)
                 urlinput.value = msg[0]
                 var urlarr = msg[0].split('.')
