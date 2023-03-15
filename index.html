@@ -408,7 +408,7 @@
                     setTimeout(() => {
                         dplayer.style.display = 'block'
                         dp.play()
-                    }, 1000)
+                    }, 2000)
                 })
                 //点击确认后控件变化
                 okview.style.display = 'none'
@@ -458,9 +458,9 @@
                 dp.on('loadstart', () => {
                     setTimeout(() => {
                         dplayer.style.display = 'block'
-                        dp.seek(msg[1] + 1)
+                        dp.seek(msg[1] + 2)
                         dp.play()
-                    }, 1000)
+                    }, 2000)
                 })
             }
         })
