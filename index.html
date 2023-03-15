@@ -226,7 +226,8 @@
         <div class="nav" id="urlpage" style="display: none;">
             <form id="urlform" action="">
                 <input id="urlinput" autocomplete="off" style="display: none;" />
-                <input id="goinput" autocomplete="off" placeholder="请输入有效的视频解析链接或流媒体直链(例如：.mp4或.m3u8格式)" style="display: none;" />
+                <input id="goinput" autocomplete="off" placeholder="请输入有效的视频解析链接或流媒体直链(例如：.mp4或.m3u8格式)"
+                    style="display: none;" />
                 <button id="addurl">
                     <h1>+</h1>
                 </button>
@@ -286,7 +287,7 @@
         urlinput.value = ''
         const dp = new DPlayer({
             container: document.getElementById('dplayer'),
-            live: true,
+            live: false,
             autoplay: false,
             airplay: true,
             chromecast: true,
@@ -297,7 +298,7 @@
             volume: 0.7,
             video: {
                 url: urlinput.value,
-                type: 'hls'
+                type: dptype
             },
         })
         //填入房间名和用户名
@@ -374,16 +375,17 @@
                 urlinput.value = goinput.value
                 socket.emit('url message', urlinput.value)
                 goinput.value = ''
-            }else{
+            } else {
                 const item = document.createElement('li')
                 item.textContent = `🔈 该视频已经播放过，请更换链接！`
                 userRecord.insertBefore(item, userRecord.lastChild)
                 setTimeout(() => {
                     userRecord.removeChild(userRecord.lastChild)
                 }, 3000)
-            } 
+            }
         })
         socket.on('url message', function (msg) {
+            urlinput.value = msg
             if (msg.indexOf('http') != -1) {
                 var urlarr = msg.split('.')
                 if (urlarr[urlarr.length - 1] === 'm3u8') {
@@ -398,14 +400,15 @@
                 }
                 dp.switchVideo(
                     {
-                        url: msg,
+                        url: urlinput.value,
                         type: dptype
                     }
                 )
                 dp.on('loadstart', () => {
                     setTimeout(() => {
+                        dplayer.style.display = 'block'
                         dp.play()
-                    }, 3000)  
+                    }, 1000)
                 })
                 //点击确认后控件变化
                 okview.style.display = 'none'
@@ -420,7 +423,7 @@
                     userRecord.removeChild(userRecord.lastChild)
                 }, 3000)
             }
-        })  
+        })
         dp.on('timeupdate', () => {
             var arr = [urlinput.value, dp.video.currentTime]
             socket.emit('timeupdate', arr);
@@ -431,30 +434,35 @@
             })
         })
         //新用户加入，视频同步到其他在线用户
-        socket.once('connection', (msg) => {
-            urlinput.value = msg[0]
-            var urlarr = msg[0].split('.')
-            if (urlarr[urlarr.length - 1] === 'm3u8') {
-                dptype = 'hls'
-            } else if (urlarr[urlarr.length - 1] === 'mpd') {
-                dptype = 'dash'
-            }
-            else if (urlarr[urlarr.length - 1] === 'flv') {
-                dptype = 'flv'
-            } else {
-                dptype = 'auto'
-            }
-            dp.switchVideo(
-                {
-                    url: msg[0],
-                    type: dptype
+        socket.on('timeupdate', (msg) => {
+            if (urlinput.value != msg[0] && urlinput.value == '') {
+                console.log(dp.video.currentTime)
+                urlinput.value = msg[0]
+                var urlarr = msg[0].split('.')
+                if (urlarr[urlarr.length - 1] === 'm3u8') {
+                    dptype = 'hls'
+                } else if (urlarr[urlarr.length - 1] === 'mpd') {
+                    dptype = 'dash'
                 }
-            )
-            dp.on('loadstart', () => {
-                dplayer.style.display = 'block'
-                dp.seek(msg[1])  
-                dp.play()
-            })
+                else if (urlarr[urlarr.length - 1] === 'flv') {
+                    dptype = 'flv'
+                } else {
+                    dptype = 'auto'
+                }
+                dp.switchVideo(
+                    {
+                        url: msg[0],
+                        type: dptype
+                    }
+                )
+                dp.on('loadstart', () => {
+                    setTimeout(() => {
+                        dplayer.style.display = 'block'
+                        dp.seek(msg[1] + 1)
+                        dp.play()
+                    }, 1000)
+                })
+            }
         })
         //播放同步
         dp.on('play', () => {
@@ -482,7 +490,7 @@
             if (msg != videotime && dp.video.currentTime != dp.video.duration && dp.video.duration != null) {
                 dp.seek(msg)
                 videotime = dp.video.currentTime
-            } else { 
+            } else {
                 return
             }
         })

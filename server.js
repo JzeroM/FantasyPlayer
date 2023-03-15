@@ -25,7 +25,7 @@ io.on('connection', (socket) => {
     })
     //随视频播放持续广播当前播放地址和播放位置
     socket.on('timeupdate', (msg) => {
-      io.to(roomname).emit('connection', msg)
+      io.to(roomname).emit('timeupdate', msg)
     })
     //广播视频地址
     socket.on('url message', (msg) => {
